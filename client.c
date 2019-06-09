@@ -51,10 +51,10 @@ int main(){
 	struct sockaddr_in serverAddr;
 	clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if(clientSocket < 0){
-		printf("[-]Error in connection.\n");
+		printf("[-]Ket noi bi loi.\n");
 		exit(1);
 	}
-	printf("[+]Client Socket is created.\n");
+	printf("[+]Client Socket da duoc ket noi.\n");
 
 	memset(&serverAddr, '\0', sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
@@ -62,10 +62,10 @@ int main(){
 	serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	if(connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0){
-		printf("[-]Error in connection.\n");
+		printf("[-]Ket noi bi loi.\n");
 		exit(1);
 	}
-	printf("[+]Connected to Server.\n");
+	printf("[+]Da ket noi thanh cong toi Server.\n");
 
 	while(1){
 		showMenuDevices();
@@ -81,21 +81,21 @@ void showMenuDevices(){
         while (1) {
         	char *token;
                 choice = 0;
-                printf("-----Welcome-----\n");
-                printf("Please choose type of device to connect\n");
-                printf("1. TV\n");
-                printf("2. Air Conditioner\n");
-                printf("3. PC\n");
-		printf("4. Quit\n");
-                printf("Your choice: ");
+                printf("\n-----------------DIEU KHIEN DIEN NHA THONG MINH-------------------------\n");
+                printf("Chon thiet bi de su dung\n");
+                printf("| 1. TV\n");
+                printf("| 2. Dieu Hoa\n");
+                printf("| 3. PC\n");
+		printf("| 4. Thoat\n");
+                printf("Moi ban nhap so cua thiet bi: ");
                 while (choice == 0) {
                         if(scanf("%d",&choice) < 1) {
                                 choice = 0;
                         }
                         if(choice < 1 || choice > 4) {
                                 choice = 0;
-                                printf("Invalid choice!\n");
-                                printf("Enter again: ");
+                                printf("Thiet bi nhap khong dung!\n");
+                                printf("Hay nhap lai: ");
                         }
                         while((c = getchar())!='\n') ;
                 }
@@ -137,20 +137,20 @@ void showMenuAction(char *deviceName, int MODE_DEFAULT, int MODE_SAVING) {
         char c;
         while (1) {
                 choice = 0;
-                printf("-----Welcome-----\n");
-                printf("Please choose an action:\n");
-                printf("1. Run at default mode \n");
-                printf("2. Run at saving mode\n");
-                printf("3. Turn off and quit\n");
-                printf("Your choice: ");
+                printf("\n\n-----------------DIEU KHIEN DIEN NHA THONG MINH-------------------------\n");
+                printf("Chon che do hoat dong cua thiet bi:\n");
+                printf("| 1. Che do binh thuong \n");
+                printf("| 2. Che do tiet kiem nang luong (Che do nay se anh huong den hieu nang cua thiet bi)\n");
+                printf("| 3. Tat thiet bi va thoat\n");
+                printf("Moi ban chon che do: ");
                 while (choice == 0) {
                         if(scanf("%d",&choice) < 1) {
                                 choice = 0;
                         }
                         if(choice < 1 || choice > 4) {
                                 choice = 0;
-                                printf("Invalid choice!\n");
-                                printf("Enter again: ");
+                                printf("Che do khong thich hop!\n");
+                                printf("Moi chon lai: ");
                         }
                         while((c = getchar())!='\n') ;
                 }
@@ -261,13 +261,13 @@ void runDevice(int voltage, char *deviceName, int isSaving){
 	countDown = 10;
 	while (1) {
 		if (*shm<= threshold){
-			printf("The current device is running with %d\n Press enter to stop this device\n",*shm);
+			printf("Muc nang luong tieu thu tai thoi diem hien tai %d\n An enter de ngat thiet bi\n",*shm);
 		}
 		else if(*shm <= maxThreshold){
-			printf("The threshold is exceeded. The supply currently is %d\n",*shm);
+			printf("Dang vuot qua muc tieu thu nguong cho phep. Muc tieu thu nang luong hien tai %d\n",*shm);
 		}
 		else{
-			printf("Maximum threshold is exceeded. A device will be turn off in %d\n", countDown);
+			printf("Da vuot qua muc tieu thu nguong toi da. Thiet bi moi se bi dung trong %d\n", countDown);
 			countDown = countDown - 1;
 			if(countDown < 0){
 				stopDevice(deviceName);
