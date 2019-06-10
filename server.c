@@ -76,6 +76,7 @@ int main(){
         int shmid;
         key_t key;
         int *shm;
+        int *sumFirstVotage;
         key = atoi(KEY);
         int currentVoltage = 0;
 
@@ -90,6 +91,22 @@ int main(){
         }
 
         *shm = 0;
+
+        int shmidVotage;
+        key_t keyVotage;
+        
+        keyVotage = 2345;
+
+        if ((shmidVotage = shmget(keyVotage, SHMSZ, IPC_CREAT | 0666)) < 0) {
+            perror("shmget");
+            exit(1);
+        }
+
+        if ((sumFirstVotage = shmat(shmidVotage, NULL, 0)) == (int *) -1) {
+            perror("shmat");
+            exit(1);
+        }
+        *sumFirstVotage = 0;
 
         getInfo("1111");
         if((listenSock = socket(AF_INET,SOCK_STREAM,0)) < 0) {
@@ -116,6 +133,7 @@ int main(){
                 connectSock = accept (listenSock, (struct sockaddr *) &clientAddr, &clilen);
                 if((pid=fork()) == 0) {
                         close(listenSock);
+                        int check = 0;
                         while ((n = recv(connectSock, request, MAXLINE,0)) > 0)  {
                                 request[n]='\0';
                                 cmd = convertRequestToCommand(request);
@@ -123,6 +141,7 @@ int main(){
                                         *shm = *shm - currentVoltage;
                                         currentVoltage = 0;
                                         sprintf(shm2,"%s|%s|%s|",cmd.params[0],"STOP","0");
+                                        check = 0;
                                 }else if(strcmp(cmd.code,"SWITCH") == 0){
                                         sleep(1);
                                         sprintf(shm2,"%s|%s|%s|",cmd.params[0], cmd.params[1],cmd.params[2]);
@@ -133,6 +152,10 @@ int main(){
                                         sprintf(shm2,"%s|%s|%s|",cmd.params[0], cmd.params[1],cmd.params[2]);
                                         currentVoltage = atoi(cmd.params[2]);
                                         *shm = *shm + currentVoltage;
+                                        if(check == 0){
+                                            *sumFirstVotage += currentVoltage;
+                                            check = 1;
+                                        }
                                 }
                                 send(connectSock,KEY, 4, 0);
 
