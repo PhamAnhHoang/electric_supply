@@ -313,7 +313,22 @@ void runDevice(int defaultVoltage, int savingVoltage, char *deviceName, int isSa
 			
 		}
 		else if(*shm <= maxThreshold){
-			printf("Đang vượt qua mức tiêu thụ ngưỡi cho phép. Mức tiêu thụ năng lượng hiện tại %d\n",*shm);
+			f(*sumFirstVotage <= maxThreshold && check == 1){
+				printf("Các thiết bị chuyển về chế độ ban đầu!\n");
+				if(firstCase == 1){
+					if (strstr(firstDiviceName, "|SAVING|") == NULL) {
+					    strcat(firstDiviceName,"|SAVING|");
+					}
+				} else {
+					if (strstr(firstDiviceName, "|NORMAL|") == NULL) {
+					    strcat(firstDiviceName,"|NORMAL|");
+					}
+				}
+				switchMode(firstDiviceName, "SWITCH",firstVotage);
+				check = 0;
+			}else{
+				printf("Đang vượt qua mức tiêu thụ ngưỡi cho phép. Mức tiêu thụ năng lượng hiện tại %d\n",*shm);
+			}
 		}
 		else{
 			if (!isSaving) {
