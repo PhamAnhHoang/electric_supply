@@ -31,27 +31,19 @@ command cmd;
 char *shm2;
 
 void getInfo(char * key_from_server){
-	int shmid;
+    int shmid;
         key_t key;
-	key = atoi(key_from_server);
-    //tạo shared memory
-    //int shmget(key_t key,int size,int shmflg); 
-    //key: key tương ứng với shared memory
-    //size: kích thước (tính theo đơn vị byte)
-    //shmflg: tương tự như semflg của semget(), nhưng không có IPC_EXCL
-	if ((shmid = shmget(key, 1000, 0666)) < 0) {
-	    perror("shmget");
-	    exit(1);
-	}
-    //gán shared memory
-    //void *shmat(int shmid,void *shmaddr,int shmflg); 
-    //shmid: shared memory ID trả về từ hàm shmget()
-    //shmaddr: địa chỉ nơi gắn vùng nhớ chia sẻ
-    //shmflg: SHM_RDONLY (read-only) hoặc 0
-	if ((shm2 = shmat(shmid, NULL, 0)) == (char*) -1) {
-	    perror("shmat");
-	    exit(1);
-	}
+    key = atoi(key_from_server);
+
+    if ((shmid = shmget(key, 1000, 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    if ((shm2 = shmat(shmid, NULL, 0)) == (char*) -1) {
+        perror("shmat");
+        exit(1);
+    }
 }
 
 void sig_chld(int singno){
@@ -131,11 +123,16 @@ int main(){
                                         *shm = *shm - currentVoltage;
                                         currentVoltage = 0;
                                         sprintf(shm2,"%s|%s|%s|",cmd.params[0],"STOP","0");
+                                }else if(strcmp(cmd.code,"SWITCH") == 0){
+                                        sleep(1);
+                                        sprintf(shm2,"%s|%s|%s|",cmd.params[0], cmd.params[1],cmd.params[2]);
+                                        *shm = *shm - currentVoltage;
+                                        currentVoltage = atoi(cmd.params[2]);
+                                        *shm = *shm + currentVoltage;
                                 }else{
                                         sprintf(shm2,"%s|%s|%s|",cmd.params[0], cmd.params[1],cmd.params[2]);
                                         currentVoltage = atoi(cmd.params[2]);
                                         *shm = *shm + currentVoltage;
-                                        printf("%d\n", currentVoltage);
                                 }
                                 send(connectSock,KEY, 4, 0);
 

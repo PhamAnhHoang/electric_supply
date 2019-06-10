@@ -19,6 +19,7 @@ int clientSocket;
 char serverResponse[MAXLINE];
 int *shm;
 char *shm2;
+// int currentVoltage;
 char info[1000];
 char systemInfo[1000];
 int threshold;
@@ -32,8 +33,9 @@ void getResponse();
 void makeCommand(char* command, char* code, char* param1, char* param2);
 void showMenuAction(char *deviceName, int MODE_DEFAULT, int MODE_SAVING);
 void getShareMemoryPointer(char * key_from_server);
-void runDevice(int voltage, char* deviceName,int isSaving);
+void runDevice(int defaultVoltage, int savingVoltage, char* deviceName,int isSaving);
 void stopDevice(char *deviceName);
+void switchMode(char *deviceName, int newVoltage);
 void getInfo(char * key_from_server);
 
 int main(){
@@ -77,22 +79,22 @@ int main(){
 void showMenuDevices(){
         int choice;
         char c;
-		char *a[3];
+	char *a[3];
+	char *token;
         while (1) {
-        	char *token;
                 choice = 0;
                 printf("-----Welcome-----\n");
                 printf("Please choose type of device to connect\n");
                 printf("1. TV\n");
                 printf("2. Air Conditioner\n");
                 printf("3. PC\n");
-		printf("4. Quit\n");
+				printf("4. Quit\n");
                 printf("Your choice: ");
                 while (choice == 0) {
                         if(scanf("%d",&choice) < 1) {
                                 choice = 0;
                         }
-                        if(choice < 1 || choice > 4) {
+                        if(choice < 1 || choice > 6) {
                                 choice = 0;
                                 printf("Invalid choice!\n");
                                 printf("Enter again: ");
@@ -122,8 +124,7 @@ void showMenuDevices(){
 			token = strtok(NULL,",");
 			a[0] = strtok(token,"|");
 			a[1] = strtok(NULL,"|");
-			a[2] = strtok(NULL,"|");
-		
+			a[2] = strtok(NULL,"|");		
 			showMenuAction(a[0],atoi(a[1]),atoi(a[2]));
 			break;
                 default:
@@ -154,13 +155,14 @@ void showMenuAction(char *deviceName, int MODE_DEFAULT, int MODE_SAVING) {
                         }
                         while((c = getchar())!='\n') ;
                 }
-
                 switch (choice) {
 		case 1:
-			runDevice(MODE_DEFAULT,deviceName,0);
+			deviceName = strtok(deviceName,"|");
+			runDevice(MODE_DEFAULT,MODE_SAVING,deviceName,0);
 			break;
                 case 2:
-			runDevice(MODE_SAVING,deviceName,1);
+			deviceName = strtok(deviceName,"|");
+			runDevice(MODE_DEFAULT,MODE_SAVING,deviceName,1);
 			break;
                 default:
                         exit(0);
@@ -217,11 +219,10 @@ void getShareMemoryPointer(char * key_from_server){
 	if ((shmid = shmget(key, SHMSZ, 0666)) < 0) {
 	    perror("shmget");
 	    exit(1);
-	}
-
+	};
 	if ((shm = shmat(shmid, NULL, 0)) == (int*) -1) {
-	    perror("shmat");
-	    exit(1);
+		perror("shmat");
+		exit(1);
 	}
 }
 
@@ -241,19 +242,23 @@ void getInfo(char * key_from_server){
 	}
 }
 
-void runDevice(int voltage, char *deviceName, int isSaving){
+void runDevice(int defaultVoltage, int savingVoltage, char *deviceName, int isSaving){
 	char command[100];
 	char response[100];
 	char buffer[20];
 	char param[20];
-	int countDown ;
+	int countDown;
+	int currentVoltage;
 	if(isSaving){
 		strcat(deviceName,"|SAVING|");
-	}
-	else{
+		snprintf(buffer, 10, "%d", savingVoltage);
+		currentVoltage = savingVoltage;
+	} else {
 		strcat(deviceName,"|NORMAL|");
+		snprintf(buffer, 10, "%d", defaultVoltage);
+		currentVoltage = defaultVoltage;
 	}
-	snprintf(buffer, 10, "%d", voltage);
+	// snprintf(buffer, 10, "%d", voltage);
 	makeCommand(command,"ON", deviceName,buffer);
 	send(clientSocket, command, strlen(command), 0);
 	getResponse();
@@ -261,17 +266,24 @@ void runDevice(int voltage, char *deviceName, int isSaving){
 	countDown = 10;
 	while (1) {
 		if (*shm<= threshold){
-			printf("The current device is running with %d\n Press enter to stop this device\n",*shm);
+			printf("The current device is running with %d\nThe total supply currently is %d\n Press enter to stop this device\n",currentVoltage,*shm);
 		}
 		else if(*shm <= maxThreshold){
-			printf("The threshold is exceeded. The supply currently is %d\n",*shm);
+			printf("Warning! The threshold is exceeded. The total supply currently is %d\n",*shm);
 		}
 		else{
-			printf("Maximum threshold is exceeded. A device will be turn off in %d\n", countDown);
-			countDown = countDown - 1;
-			if(countDown < 0){
-				stopDevice(deviceName);
-				break;
+			if (!isSaving) {
+				printf("The threshold is exceeded. Switching to saving mode!\n");
+				currentVoltage = savingVoltage;
+				switchMode(deviceName, currentVoltage);
+			}
+			if (*shm > maxThreshold) {
+				printf("Maximum threshold is exceeded. A device will be turn off in %d\n", countDown);
+				countDown--;
+				if(countDown < 0){
+					stopDevice(deviceName);
+					break;
+				}
 			}
 		}
 
@@ -287,6 +299,16 @@ void stopDevice(char *deviceName)
 {
 	char command[100];
 	makeCommand(command,"STOP", deviceName, NULL);
+	send(clientSocket, command, strlen(command), 0);
+	getResponse();
+}
+
+void switchMode(char *deviceName, int newVoltage)
+{
+	char command[100];
+	char buffer[20];
+	snprintf(buffer, 10, "%d", newVoltage);
+	makeCommand(command,"SWITCH", deviceName, buffer);
 	send(clientSocket, command, strlen(command), 0);
 	getResponse();
 }
