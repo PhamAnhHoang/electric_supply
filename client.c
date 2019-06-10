@@ -270,6 +270,7 @@ void runDevice(int defaultVoltage, int savingVoltage, char *deviceName, int isSa
 		}
 		else if(*shm <= maxThreshold){
 			printf("Dang vuot qua muc tieu thu nguong cho phep. Muc tieu thu nang luong hien tai %d\n",*shm);
+		}
 		else{
 			if (!isSaving) {
 				printf("Nguong vuot qua, cac thiet bi chuyen ve che do tiet kiem!\n");
