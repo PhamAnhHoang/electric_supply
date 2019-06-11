@@ -186,7 +186,7 @@ void showMenuAction(char *deviceName, int MODE_DEFAULT, int MODE_SAVING) {
 			break;
                 case 2:
 			deviceName = strtok(deviceName,"|");
-			firstVotage = MODE_DEFAULT;
+			firstVotage = MODE_SAVING;
 			strcpy(firstDiviceName, deviceName);
 			firstCase = 1;
 			runDevice(MODE_DEFAULT,MODE_SAVING,deviceName,1);
@@ -313,7 +313,7 @@ void runDevice(int defaultVoltage, int savingVoltage, char *deviceName, int isSa
 			
 		}
 		else if(*shm <= maxThreshold){
-			f(*sumFirstVotage <= maxThreshold && check == 1){
+			if(*sumFirstVotage <= maxThreshold && check == 1){
 				printf("Các thiết bị chuyển về chế độ ban đầu!\n");
 				if(firstCase == 1){
 					if (strstr(firstDiviceName, "|SAVING|") == NULL) {
